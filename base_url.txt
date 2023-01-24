@@ -1,0 +1,11 @@
+spring.datasource.url=jdbc:postgresql://containers-us-west-180.railway.app:6620/railway
+spring.datasource.username=postgres
+spring.datasource.password=VfaFPzsdnYHzrTJsprLE
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=true
+spring.main.allow-bean-definition-overriding=true
+
+spring.data.mongodb.uri=mongodb://mongo:CtmYkTjratZFJYD6PZkb@containers-us-west-148.railway.app:7038
+spring.data.mongodb.port=7038
+spring.data.mongodb.database=test
