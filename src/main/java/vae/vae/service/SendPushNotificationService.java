@@ -16,8 +16,7 @@ public class SendPushNotificationService {
 
     public static void sendNotifcation(Enchere enchere) throws Exception{
         String url = "https://onesignal.com/api/v1/notifications";
-//        +enchere.getUtilisateurs().getPrenom()+
-        String message = "Une enchère de vient de terminer. Veuillez nous rejoindre ^^";
+        String message = "Une enchère de "+enchere.getUtilisateurs().getPrenom()+" vient de terminer. Veuillez nous rejoindre ^^";
 
         HashMap<String, Object> dataNotif = new HashMap<>();
         HashMap<String, String> content = new HashMap<>();
