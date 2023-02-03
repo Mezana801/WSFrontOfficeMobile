@@ -10,15 +10,16 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.io.Serializable;
 import java.sql.Connection;
 
 @Getter
 @Setter
 @AllArgsConstructor
-// @Entity
-// @Table(name = "categorie")
-public class Categorie extends ObjetBDD {
-    // @Id
+@Entity
+@Table(name = "categorie")
+public class Categorie extends ObjetBDD implements Serializable {
+    @Id
     int id;
     String nom;
 

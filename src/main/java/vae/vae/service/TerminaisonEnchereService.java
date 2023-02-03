@@ -13,8 +13,8 @@ import java.util.ArrayList;
 @Service
 public class TerminaisonEnchereService {
 
-   // @Autowired
-  //  EnchereRepository enchereRepository;
+    @Autowired
+    EnchereRepository enchereRepository;
 
     @Autowired
     EnchereTerminerRepository enchereTerminerRepository;
@@ -24,9 +24,9 @@ public class TerminaisonEnchereService {
 
     @Scheduled(fixedRate = 1000)
     public void terminaisonEnchere(){
-/*        ArrayList<Enchere> loading = enchereRepository.findLoading();
+        ArrayList<Enchere> loading = enchereRepository.findLoading();
         for( Enchere e: loading ){
                 e.checkFini(enchereTerminerRepository, miseEnchereRepository);
-        } */
+        }
     }
 }

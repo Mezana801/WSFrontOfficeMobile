@@ -12,12 +12,12 @@ import javax.persistence.*;
 import java.sql.*;
 import java.util.ArrayList;
 
-//@Entity
+@Entity
 @Getter
 @Setter
-//@Table(name = "Enchere")
+@Table(name = "Enchere")
 public class Enchere extends ObjetBDD {
-  //  @Id
+    @Id
    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
     Timestamp dateetheure;
@@ -26,21 +26,38 @@ public class Enchere extends ObjetBDD {
     Time dureeenchere;
     int utilisateursid;
 
-    //@OneToOne(cascade = CascadeType.ALL)
-    //@JoinColumn(name = "utilisateursID",referencedColumnName = "id",insertable = false, updatable = false)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "utilisateursID",referencedColumnName = "id",insertable = false, updatable = false)
     @FieldDisable
     Utilisateurs utilisateurs;
     int categorieid;
 
- //   @OneToOne(cascade = CascadeType.ALL)
-  //  @JoinColumn(name = "categorieid",referencedColumnName = "id",insertable = false, updatable = false)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "categorieid",referencedColumnName = "id",insertable = false, updatable = false)
     @FieldDisable
     Categorie categorie;
 
     @FieldDisable
+    @Transient
     int status;
     @FieldDisable
+    @Transient
     String designationstatus;
+    @FieldDisable
+    @Transient
+    String coverphoto;
+    @FieldDisable
+    @Transient
+    String[] photos;
+    @FieldDisable
+    @Transient
+    double prixmin;
+    @FieldDisable
+    @Transient
+    double prixmax;
+    @FieldDisable
+    @Transient
+    Enchereterminer maxMise;
 
     public Enchere(int id, Timestamp dateEtHeure, String description, double prixDeMise, Time dureeEnchere, int utilisateursID, int categorieID) {
         this.id = id;
@@ -78,6 +95,42 @@ public class Enchere extends ObjetBDD {
                 Categorie categorie = (Categorie) new Categorie(e.getCategorieid()).find(conn);
                 e.setUtilisateurs(utilisateurs);
                 e.setCategorie(categorie);
+                e.setCoverphoto(PhotoEnchere.getcoverPhoto(e.getId(), conn));
+                array.add(e);
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            if (res !=null) res.close();
+            if (stat !=null) stat.close();
+        }
+        Enchere[] result = new Enchere[array.size()];
+        array.toArray(result);
+        return result;
+    }
+
+    public Enchere[] findHomeEnchere(Connection conn) throws Exception{
+        ArrayList<Enchere> array = new ArrayList<>();
+        String sql = "select * from view_enchere_status where status != 1 order by id desc limit 12";
+        System.out.println(sql);
+
+        Statement stat = null;
+        ResultSet res = null;
+
+        try{
+            stat = conn.createStatement();
+            res = stat.executeQuery(sql);
+
+            while( res.next() ){
+                Enchere e = new Enchere(res.getInt("id"), res.getTimestamp("dateetheure"), res.getString("description"), res.getDouble("prixDeMise"), res.getTime("dureeEnchere"), res.getInt("utilisateursID"), res.getInt("categorieID"));
+                e.setStatus(res.getInt("status"));   e.setDesignationstatus(res.getString("designationstatus"));
+                Utilisateurs utilisateurs = (Utilisateurs) new Utilisateurs(e.getUtilisateursid()).find(conn);
+                Categorie categorie = (Categorie) new Categorie(e.getCategorieid()).find(conn);
+                e.setUtilisateurs(utilisateurs);
+                e.setCategorie(categorie);
+                e.setCoverphoto(PhotoEnchere.getcoverPhoto(e.getId(), conn));
                 array.add(e);
             }
         }
@@ -112,6 +165,11 @@ public class Enchere extends ObjetBDD {
                 Categorie categorie = (Categorie) new Categorie(e.getCategorieid()).find(conn);
                 e.setUtilisateurs(utilisateurs);
                 e.setCategorie(categorie);
+                e.setCoverphoto(PhotoEnchere.getcoverPhoto(e.getId(), conn));
+
+                Enchereterminer enchereterminer = new Enchereterminer(e.getId());
+                enchereterminer = enchereterminer.find(conn);
+                e.setMaxMise(enchereterminer);
                 array.add(e);
             }
         }
@@ -147,6 +205,8 @@ public class Enchere extends ObjetBDD {
                 Categorie categorie = (Categorie) new Categorie(result.getCategorieid()).find(conn);
                 result.setUtilisateurs(utilisateurs);
                 result.setCategorie(categorie);
+                result.setCoverphoto(PhotoEnchere.getcoverPhoto(result.getId(), conn));
+                result.setPhotos(PhotoEnchere.getPhotos(result.getId(), conn));
             }
         }
         catch(Exception e){
@@ -159,19 +219,25 @@ public class Enchere extends ObjetBDD {
         return result;
     }
 
-    public Enchere[] search(Connection conn, String description, Timestamp dateheure, int idcategorie, double prixmin, int status) throws Exception{
+    public Enchere[] search(Connection conn, String description, Timestamp dateheure, int idcategorie, double prixmin, double prixmax, int status) throws Exception{
         ArrayList<Enchere> array = new ArrayList<>();
         String sql = "select * from view_enchere_status where 1=1 ";
         if ( description != null ){
-            sql+= "and description like '%"+ description +"%'";
+            if ( description.trim().length() > 0 ) {
+                sql += "and lower(description) like lower('%" + description + "%')";
+            }
         } if ( dateheure !=null ) {
-            sql+=" and dateetheure = '"+ String.valueOf(dateheure) +"'";
+            sql+=" and (dateetheure = '"+ String.valueOf(dateheure) +"')";
         } if (idcategorie != 0) {
-            sql +=" and categorieid = "+ idcategorie +"";
-        } if (prixmin != 0 ) {
-            sql += " and prixmin = "+ prixmin +"";
+            sql +=" and (categorieid = "+ idcategorie +")";
         } if (status != 10 ){
-            sql += " and status = "+status;
+            sql += " and (status = "+status+")";
+        } if (prixmin != 0  && prixmax != 0) {
+            sql += " and ("+ prixmin +" <= prixdemise) and (prixdemise <= "+prixmax+")";
+        } else if(prixmin != 0  && prixmax == 0){
+            sql += " and ("+ prixmin +" <= prixdemise)";
+        } else if(prixmin == 0  && prixmax != 0){
+            sql += " and ("+ prixmax +" >= prixdemise)";
         }
         System.out.println(sql);
 
@@ -185,10 +251,11 @@ public class Enchere extends ObjetBDD {
             while( res.next() ){
                 Enchere e = new Enchere(res.getInt("id"), res.getTimestamp("dateetheure"), res.getString("description"), res.getDouble("prixDeMise"), res.getTime("dureeEnchere"), res.getInt("utilisateursID"), res.getInt("categorieID"));
                 e.setStatus(res.getInt("status"));   e.setDesignationstatus(res.getString("designationstatus"));
-                Utilisateurs utilisateurs = new Utilisateurs(e.getUtilisateursid()).findOne(conn);
-                Categorie categorie = new Categorie(e.getCategorieid()).findOne(conn);
+                Utilisateurs utilisateurs = (Utilisateurs) new Utilisateurs(e.getUtilisateursid()).find(conn);
+                Categorie categorie = (Categorie) new Categorie(e.getCategorieid()).find(conn);
                 e.setUtilisateurs(utilisateurs);
                 e.setCategorie(categorie);
+                e.setCoverphoto(PhotoEnchere.getcoverPhoto(e.getId(), conn));
                 array.add(e);
             }
         }
@@ -217,8 +284,9 @@ public class Enchere extends ObjetBDD {
         MiseEnchere maxMise = miseEnchereRepository.getmontantMax(this.getId());
         if( maxMise == null ){
            enchereTerminerRepository.saveNullUserID(this.getId(), finission, 0, null);
+        } else{
+            Enchereterminer terminer = new Enchereterminer(this.getId(), finission, maxMise.getMontantMax(), maxMise.getUtilisateursID());
+            enchereTerminerRepository.save(terminer);
         }
-        Enchereterminer terminer = new Enchereterminer(this.getId(), finission, maxMise.getMontantMax(), maxMise.getUtilisateursID());
-        enchereTerminerRepository.save(terminer);
     }
 }

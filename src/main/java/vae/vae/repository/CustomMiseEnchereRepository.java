@@ -18,4 +18,11 @@ public interface CustomMiseEnchereRepository {
             "{'$sort': {montantMax: -1   }}"
     })
     List<MiseEnchere> findAllMiseEnchereByEnchereID(int idEnchere);
+
+    @Aggregation(pipeline = {
+            "{'$match':  {'enchereID':  ?0}}",
+            "{'$sort': {montantMax: -1   }}",
+            "{ '$limit': 10 }"
+    })
+    List<MiseEnchere> getMiseLimit10(int idEnchere);
 }

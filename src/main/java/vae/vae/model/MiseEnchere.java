@@ -17,4 +17,5 @@ public class MiseEnchere {
     int utilisateursID;
     Utilisateurs utilisateurs;
     double montantMax;
+    String token;
 }

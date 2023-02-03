@@ -1,15 +1,17 @@
 package vae.vae.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import vae.vae.general.ObjetBDD;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vae.vae.db.ConnectionPostgresSQL;
-import vae.vae.model.Enchere;
-import vae.vae.model.Enchereterminer;
-import vae.vae.model.PhotoEnchere;
-import vae.vae.model.Utilisateurs;
+import vae.vae.model.*;
+import vae.vae.repository.MiseEnchereRepository;
+import vae.vae.repository.TokenUsersRepository;
 import vae.vae.service.DataResponse;
 import vae.vae.service.EnchereService;
+import vae.vae.service.MiseEnchereService;
+import vae.vae.service.TokenUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,6 +23,12 @@ import java.util.Arrays;
 @RequestMapping("/enchere")
 public class EnchereController {
 
+    @Autowired
+    private TokenUsersRepository tokenUsersRepository;
+
+    @Autowired
+    private MiseEnchereRepository miseEnchereRepository;
+
     EnchereService enchereService;
 
     @GetMapping
@@ -28,6 +36,16 @@ public class EnchereController {
         Connection conn = ConnectionPostgresSQL.getconnect();
         DataResponse dr = new DataResponse();
         dr.setData(new Enchere().findAll(conn));
+
+        conn.close();
+        return ResponseEntity.accepted().body(dr);
+    }
+
+    @GetMapping("/home")
+    public ResponseEntity<DataResponse> getHomeEnchere() throws Exception {
+        Connection conn = ConnectionPostgresSQL.getconnect();
+        DataResponse dr = new DataResponse();
+        dr.setData(new Enchere().findHomeEnchere(conn));
 
         conn.close();
         return ResponseEntity.accepted().body(dr);
@@ -56,15 +74,13 @@ public class EnchereController {
         return ResponseEntity.accepted().body(dr);
     }
 
-    @GetMapping("/search")
+    @PostMapping("/search")
     @ResponseBody
     public  ResponseEntity<DataResponse> search(@RequestBody Enchere enchere) throws Exception {
         Connection conn = ConnectionPostgresSQL.getconnect();
         DataResponse dr = new DataResponse();
 
-        System.out.println("enchere "+enchere.getDescription());
-        Enchere[] searchResponse = enchere.search(conn, enchere.getDescription(),enchere.getDateetheure(),enchere.getCategorieid(), enchere.getPrixdemise(), enchere.getStatus());
-
+        Enchere[] searchResponse = enchere.search(conn, enchere.getDescription(),enchere.getDateetheure(),enchere.getCategorieid(), enchere.getPrixmin(), enchere.getPrixmax(), enchere.getStatus());
         dr.setData(searchResponse);
 
         conn.close();
@@ -111,6 +127,7 @@ public class EnchereController {
     public ResponseEntity<DataResponse> listeEnchereByIdUser(@RequestBody Utilisateurs utilisateurs) throws Exception {;
         Connection conn = ConnectionPostgresSQL.getconnect();
         Enchere enchere = new Enchere();
+        utilisateurs = TokenUtils.identifyUserThroughToken(utilisateurs.getToken(), tokenUsersRepository, conn);
         enchere.setUtilisateursid(utilisateurs.getId());
         Enchere[] encheres = enchere.findByUSer(conn);
 
@@ -122,13 +139,24 @@ public class EnchereController {
         return ResponseEntity.accepted().body(dr);
     }
 
+    @PostMapping("/getTheAuctionWinner")
+    public ResponseEntity<DataResponse> getTheAuctionWinner(@RequestBody Enchere enchere) throws Exception {;
+        System.out.println("passing here "+enchere.getId());
+        Connection conn = ConnectionPostgresSQL.getconnect();
+        MiseEnchere maxMiseEnchere = miseEnchereRepository.getmontantMax(enchere.getId());
+
+        DataResponse dr = new DataResponse();
+        dr.setStatus("200");
+        dr.setData(maxMiseEnchere);
+
+        conn.close();
+        return ResponseEntity.accepted().body(dr);
+    }
+
     private EnchereService getService(){
         if (this.enchereService == null){
             return new EnchereService();
         }
         return this.enchereService;
     }
-
-
-
 }

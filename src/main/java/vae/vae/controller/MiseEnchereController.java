@@ -9,9 +9,13 @@ import vae.vae.model.Enchere;
 import vae.vae.model.MiseEnchere;
 import vae.vae.model.Utilisateurs;
 import vae.vae.repository.MiseEnchereRepository;
+import vae.vae.repository.TokenUsersRepository;
 import vae.vae.service.DataResponse;
 import vae.vae.service.MiseEnchereService;
+import vae.vae.service.TokenUtils;
 
+import javax.rmi.CORBA.Util;
+import java.rmi.server.UID;
 import java.sql.Connection;
 import java.util.List;
 
@@ -23,16 +27,19 @@ public class MiseEnchereController {
     @Autowired
     MiseEnchereRepository miseEnchereRepository;
 
+    @Autowired
+    TokenUsersRepository tokenUsersRepository;
+
     @RequestMapping("/encherir")
     @GetMapping
     public ResponseEntity<DataResponse> BidAction(@RequestBody Utilisateurs utilisateurs) throws Exception{
         DataResponse dr = new DataResponse();
         if( utilisateurs.getId() == 0 ){
             dr.setStatus("500");
-            dr.setData("login.html");
+            dr.setData("/login");
         } else if( utilisateurs != null ){
             dr.setStatus("200");
-            dr.setData("encherir.html");
+            dr.setData("/miser");
         }
         return ResponseEntity.accepted().body(dr);
     }
@@ -40,20 +47,19 @@ public class MiseEnchereController {
     @RequestMapping("/addMise")
     @PostMapping
     public ResponseEntity<DataResponse> createMiseEnchere(@RequestBody MiseEnchere e) throws Exception{
-        System.out.println("rrrrr");
         DataResponse dr = new DataResponse();
         Connection conn = ConnectionPostgresSQL.getconnect();
-        MiseEnchereService service = new MiseEnchereService();
+        Utilisateurs utilisateurs = TokenUtils.identifyUserThroughToken(e.getToken(), tokenUsersRepository, conn);
         Enchere enchere = new Enchere(e.getEnchereID());
         enchere = enchere.find(conn);
+        e.setUtilisateursID(utilisateurs.getId());    e.setUtilisateurs(utilisateurs);
 
         try {
-            service.newMiseEnchere(conn, enchere, e, miseEnchereRepository);
+            new MiseEnchereService().newMiseEnchere(conn, enchere, e, miseEnchereRepository);
             dr.setStatus("200");
-            dr.setStatus("Mise insérer");
+            dr.setStatus("Mise insérée");
         }
         catch (Exception ex){
-            System.out.println("Exception "+ex.getMessage());
             dr.setStatus("500");
             dr.setData(ex.getMessage());
         }
@@ -64,7 +70,7 @@ public class MiseEnchereController {
     }
 
     @RequestMapping("/historiqueEnchere")
-    @GetMapping
+    @PostMapping
     public ResponseEntity<DataResponse> getAllMiseByEnchere(@RequestBody Enchere enchere){
        List<MiseEnchere> miseEncheres = miseEnchereRepository.findAllMiseEnchereByEnchereID(enchere.getId());
 
@@ -73,6 +79,19 @@ public class MiseEnchereController {
        dr.setData(miseEncheres);
 
        return ResponseEntity.accepted().body(dr);
+    }
+
+    @RequestMapping("/getRecentMises")
+    @PostMapping
+    public ResponseEntity<DataResponse> getMisesLimit10(@RequestBody Enchere enchere){
+        System.out.println("passing recent "+enchere.getId());
+        List<MiseEnchere> miseEncheres = miseEnchereRepository.getMiseLimit10(enchere.getId());
+
+        DataResponse dr = new DataResponse();
+        dr.setStatus("200");
+        dr.setData(miseEncheres);
+
+        return ResponseEntity.accepted().body(dr);
     }
 
 }

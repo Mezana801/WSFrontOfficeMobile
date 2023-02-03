@@ -10,15 +10,16 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.io.Serializable;
 import java.sql.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
-// @Entity
-// @Table(name = "Utilisateurs")
-public class Utilisateurs extends ObjetBDD {
-  //  @Id
+@Entity
+@Table(name = "Utilisateurs")
+public class Utilisateurs extends ObjetBDD implements Serializable  {
+    @Id
     int id;
     String nom;
     String prenom;
@@ -26,6 +27,10 @@ public class Utilisateurs extends ObjetBDD {
     String adresse;
     String email;
     String password;
+
+    @FieldDisable
+    @Transient
+    String token;
 
     public Utilisateurs() {
     }
