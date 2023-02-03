@@ -14,8 +14,6 @@ import vae.vae.service.DataResponse;
 import vae.vae.service.MiseEnchereService;
 import vae.vae.service.TokenUtils;
 
-import javax.rmi.CORBA.Util;
-import java.rmi.server.UID;
 import java.sql.Connection;
 import java.util.List;
 
