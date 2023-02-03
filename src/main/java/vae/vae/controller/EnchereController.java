@@ -110,14 +110,20 @@ public class EnchereController {
     }
 
     @PostMapping("/photo")
-    public ResponseEntity<DataResponse> createPhotoEnchere(@RequestBody PhotoEnchere photoEnchere) throws SQLException, ClassNotFoundException {
+    public ResponseEntity<DataResponse> createPhotoEnchere(@RequestBody PhotoEnchere photoEnchere) throws Exception, ClassNotFoundException {
         DataResponse dr = new DataResponse();
         enchereService = getService();
         Connection conn = ConnectionPostgresSQL.getconnect();
 
-        enchereService.addPhotoEnchere(photoEnchere,conn);
-        dr.setStatus("200");
-        dr.setData(photoEnchere);
+       try{
+           enchereService.addPhotoEnchere(photoEnchere,conn);
+           dr.setStatus("200");
+           dr.setData(photoEnchere);
+       }
+       catch (Exception e){
+           dr.setStatus("500");
+           dr.setData(e.getMessage());
+       }
 
         conn.close();
         return ResponseEntity.accepted().body(dr);

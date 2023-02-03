@@ -4,10 +4,11 @@ import vae.vae.model.ContrainteDuree;
 import vae.vae.model.Enchere;
 import vae.vae.model.PhotoEnchere;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.FileOutputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.sql.*;
+import java.util.Base64;
 
 public class EnchereService {
 
@@ -57,9 +58,10 @@ public class EnchereService {
         }
     }
 
-    public void addPhotoEnchere(PhotoEnchere photoEnchere, Connection conn) throws SQLException {
+    public void addPhotoEnchere(PhotoEnchere photoEnchere, Connection conn) throws Exception {
 
         preparedStatement = conn.prepareStatement("Insert into PhotosEnchere values (?,?)");
+        photoToFile(photoEnchere.getPhotourl());
 
         int sizephoto = photoEnchere.getPhotourl().length;
         String[] urlphoto = photoEnchere.getPhotourl();
@@ -86,6 +88,26 @@ public class EnchereService {
         closeStatement();
 
         return contrainteDuree;
+    }
+
+    public String generateUniqueName() throws Exception{
+        Date dateNow = new Date(System.currentTimeMillis());
+        Timestamp expiration = new Timestamp(dateNow.getTime());
+
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] messageDigest = md.digest(expiration.toString().getBytes());
+        BigInteger no = new BigInteger(1, messageDigest);
+        String hashtext = no.toString(16);
+        return hashtext;
+    }
+
+    public void photoToFile(String[] base64Syntax) throws Exception{
+        for( String s: base64Syntax ){
+            String path = "public/images/IMG_"+generateUniqueName()+".jpeg";
+            byte[] bytes = Base64.getDecoder().decode(s);
+            FileOutputStream stream = new FileOutputStream(path);
+            stream.write(bytes);
+        }
     }
 
 }
