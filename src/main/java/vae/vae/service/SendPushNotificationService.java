@@ -16,7 +16,8 @@ public class SendPushNotificationService {
 
     public static void sendNotifcation(Enchere enchere) throws Exception{
         String url = "https://onesignal.com/api/v1/notifications";
-        String message = "Une enchère de "+enchere.getUtilisateurs().getPrenom()+" vient de terminer. Veuillez nous rejoindre ^^";
+//        +enchere.getUtilisateurs().getPrenom()+
+        String message = "Une enchère de vient de terminer. Veuillez nous rejoindre ^^";
 
         HashMap<String, Object> dataNotif = new HashMap<>();
         HashMap<String, String> content = new HashMap<>();
@@ -30,7 +31,7 @@ public class SendPushNotificationService {
         dataNotif.put("contents", content);
         dataNotif.put("headings", headings);
         dataNotif.put("name", "INTERNAL_CAMPAIGN_NAME");
-        dataNotif.put("include_external_user_ids", enchere.getUtilisateursid());
+//        dataNotif.put("include_external_user_ids", enchere.getUtilisateursid());
 
         String token = "OGMwMGVlZGEtMmU2MS00M2NmLTg1NjgtZDE4ZjIyZDA5ZWEx";
         List<MediaType> listes = new ArrayList<>();

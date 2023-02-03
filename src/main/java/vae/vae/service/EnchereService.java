@@ -1,5 +1,6 @@
 package vae.vae.service;
 
+import vae.vae.model.Categorie;
 import vae.vae.model.ContrainteDuree;
 import vae.vae.model.Enchere;
 import vae.vae.model.PhotoEnchere;
@@ -8,7 +9,9 @@ import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class EnchereService {
 
@@ -58,21 +61,47 @@ public class EnchereService {
         }
     }
 
-    public void addPhotoEnchere(PhotoEnchere photoEnchere, Connection conn) throws Exception {
-
-        preparedStatement = conn.prepareStatement("Insert into PhotosEnchere values (?,?)");
-        photoToFile(photoEnchere.getPhotourl());
-
-        int sizephoto = photoEnchere.getPhotourl().length;
-        String[] urlphoto = photoEnchere.getPhotourl();
-
-        for (int i=0;i<sizephoto;i++){
-            preparedStatement.setInt(1,photoEnchere.getEnchereID());
-            preparedStatement.setString(2, urlphoto[i]);
-
-            preparedStatement.executeUpdate();
+    public List<Categorie> getAllCategorie(Connection conn) throws SQLException {
+        preparedStatement = conn.prepareStatement("Select * From Categorie");
+        resultSet = preparedStatement.executeQuery();
+        List<Categorie> listecategorie = new ArrayList<>();
+        while (resultSet.next()){
+            Categorie c = new Categorie();
+            c.setId(resultSet.getInt("id"));
+            c.setNom(resultSet.getString("nom"));
+            listecategorie.add(c);
         }
 
+        closeStatement();
+        return listecategorie;
+    }
+
+    public PhotoEnchere getPhotosEnchere(int idEnchere,Connection conn) throws SQLException {
+        preparedStatement = conn.prepareStatement("Select * from photosenchere where enchereid=?");
+        preparedStatement.setInt(1,idEnchere);
+        resultSet = preparedStatement.executeQuery();
+        List<String> listephoto = new ArrayList<>();
+        while (resultSet.next()){
+            String photourl = resultSet.getString("photourl");
+            listephoto.add(photourl);
+        }
+        String[] photosenchere = listephoto.toArray(new String[0]);
+        PhotoEnchere pe = new PhotoEnchere();
+        pe.setEnchereID(idEnchere);
+        pe.setPhotourl(photosenchere);
+        return pe;
+    }
+
+    public void addPhotoEnchere(PhotoEnchere photoEnchere, Connection conn) throws Exception {
+        photoToFile(photoEnchere, conn);
+    }
+
+    public void addPhotos(String fileName, int enchereID, Connection conn) throws Exception {
+        preparedStatement = conn.prepareStatement("Insert into PhotosEnchere values (?,?)");
+        preparedStatement.setInt(1,enchereID);
+        preparedStatement.setString(2, fileName);
+
+        preparedStatement.executeUpdate();
         closeStatement();
     }
 
@@ -101,13 +130,18 @@ public class EnchereService {
         return hashtext;
     }
 
-    public void photoToFile(String[] base64Syntax) throws Exception{
+    public void photoToFile(PhotoEnchere photoEnchere, Connection conn) throws Exception{
+        String[] base64Syntax = photoEnchere.getPhotourl();
+
         for( String s: base64Syntax ){
-            String path = "public/images/IMG_"+generateUniqueName()+".jpeg";
+            String sfinal = "IMG_"+generateUniqueName()+".jpeg";
+            String path = "public/images/"+sfinal;
             byte[] bytes = Base64.getDecoder().decode(s);
             FileOutputStream stream = new FileOutputStream(path);
             stream.write(bytes);
+            this.addPhotos(sfinal, photoEnchere.getEnchereID(), conn);
         }
+
     }
 
 }

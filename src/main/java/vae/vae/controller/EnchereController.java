@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @CrossOrigin("*")
@@ -71,6 +72,33 @@ public class EnchereController {
         dr.setData(new Enchere(id).find(conn));
 
         conn.close();
+        return ResponseEntity.accepted().body(dr);
+    }
+
+    @GetMapping("/photos/{idenchere}")
+    public ResponseEntity<DataResponse> getPhotosEnchere(@PathVariable int idenchere) throws SQLException, ClassNotFoundException {
+        DataResponse dataResponse = new DataResponse();
+        enchereService = getService();
+        Connection conn = ConnectionPostgresSQL.getconnect();
+
+        PhotoEnchere pe = enchereService.getPhotosEnchere(idenchere,conn);
+        dataResponse.setStatus("200");
+        dataResponse.setData(pe);
+        return ResponseEntity.accepted().body(dataResponse);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<DataResponse> getAllCategorie() throws SQLException, ClassNotFoundException {
+        DataResponse dr = new DataResponse();
+
+        Connection conn = ConnectionPostgresSQL.getconnect();
+
+        enchereService = this.getService();
+        List<Categorie> listecategorie = enchereService.getAllCategorie(conn);
+
+        dr.setData(listecategorie);
+        conn.close();
+
         return ResponseEntity.accepted().body(dr);
     }
 
