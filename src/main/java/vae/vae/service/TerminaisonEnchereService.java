@@ -26,7 +26,14 @@ public class TerminaisonEnchereService {
     public void terminaisonEnchere(){
         ArrayList<Enchere> loading = enchereRepository.findLoading();
         for( Enchere e: loading ){
-                e.checkFini(enchereTerminerRepository, miseEnchereRepository);
+                boolean response = e.checkFini(enchereTerminerRepository, miseEnchereRepository);
+                if( response ){
+                    try {
+                        SendPushNotificationService.sendNotifcation(e);
+                    } catch (Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
         }
     }
 }

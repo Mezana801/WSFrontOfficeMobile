@@ -12,6 +12,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 import vae.vae.converters.*;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,6 @@ public class VaeApplication {
     public static void main(String[] args) {
 
         SpringApplication.run(VaeApplication.class, args);
-        testWS();
     }
 
     @Bean
@@ -39,16 +40,5 @@ public class VaeApplication {
         return new MongoCustomConversions(converters);
     }
 
-    public static void testWS(){
-        String url = "https://onesignal.com/api/v1/notifications";
-        String json = "{\"app_id\":\"51533bda-7d07-4a70-91e6-dcf1b90fcb9a\",\"included_segments\":[\"Subscribed Users\"],\"contents\":{\"en\":\"English or Any Language Message\"},\"name\":\"INTERNAL_CAMPAIGN_NAME\"}";
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(json, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-
-    }
 }
 

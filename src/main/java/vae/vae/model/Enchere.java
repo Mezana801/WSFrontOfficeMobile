@@ -271,13 +271,15 @@ public class Enchere extends ObjetBDD {
         return result;
     }
 
-    public void checkFini(EnchereTerminerRepository enchereTerminerRepository, MiseEnchereRepository miseEnchereRepository){
+    public boolean checkFini(EnchereTerminerRepository enchereTerminerRepository, MiseEnchereRepository miseEnchereRepository){
         Date now = new Date(System.currentTimeMillis());
         Timestamp finish = new MiseEnchereService().addTimeToTimestamp(this.getDateetheure(), this.getDureeenchere());
 
         if( now.equals(finish) || now.after(finish)){
             finishEnchere(now, enchereTerminerRepository, miseEnchereRepository);
+            return true;
         }
+        return false;
     }
 
     public void finishEnchere(Date finission, EnchereTerminerRepository enchereTerminerRepository, MiseEnchereRepository miseEnchereRepository){
